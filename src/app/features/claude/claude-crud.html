@@ -1,0 +1,349 @@
+<div class="space-y-6 animate-fade-in select-none">
+  <!-- Feature Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-extrabold bg-gradient-to-r from-slate-800 to-indigo-900 bg-clip-text text-transparent tracking-tight">
+        Consultas a Claude AI
+      </h1>
+      <p class="text-slate-600 mt-1 max-w-xl text-sm">
+        Consulta el historial y realiza operaciones CRUD completas sobre consultas enviadas a Claude AI.
+      </p>
+    </div>
+    <div class="flex items-center space-x-3 self-end md:self-auto flex-shrink-0">
+      <div class="flex items-center space-x-2">
+        <span class="text-xs text-slate-400 font-semibold uppercase">Total Consultas</span>
+        <span class="px-3 py-1 bg-white border border-slate-200 text-slate-800 font-bold rounded-xl text-sm">{{ queriesList().length }}</span>
+      </div>
+      <button (click)="openCreateModal()" class="flex items-center space-x-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md hover:shadow-indigo-500/10 transition cursor-pointer select-none text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Nueva Consulta</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CRUD List Card / Full Width Table Area -->
+  <div class="bg-white/70 backdrop-blur-md border border-slate-200/60 hover:border-slate-300 rounded-2xl p-6 transition duration-300">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+      <h2 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <span>Listado de Consultas de Claude AI</span>
+      </h2>
+
+      <!-- Status Filters -->
+      <div class="flex items-center space-x-1 p-1 bg-slate-100 border border-slate-200/60 rounded-xl">
+        <button (click)="filterStatus.set('ALL'); applyFilters()"
+          class="px-3 py-1.5 text-xs font-semibold rounded-lg transition select-none cursor-pointer"
+          [class.bg-indigo-600]="filterStatus() === 'ALL'" [class.text-white]="filterStatus() === 'ALL'"
+          [class.text-slate-600]="filterStatus() !== 'ALL'">
+          Todos
+        </button>
+        <button (click)="filterStatus.set('COMPLETED'); applyFilters()"
+          class="px-3 py-1.5 text-xs font-semibold rounded-lg transition select-none cursor-pointer"
+          [class.bg-indigo-600]="filterStatus() === 'COMPLETED'" [class.text-white]="filterStatus() === 'COMPLETED'"
+          [class.text-slate-600]="filterStatus() !== 'COMPLETED'">
+          Completados
+        </button>
+        <button (click)="filterStatus.set('PENDING'); applyFilters()"
+          class="px-3 py-1.5 text-xs font-semibold rounded-lg transition select-none cursor-pointer"
+          [class.bg-indigo-600]="filterStatus() === 'PENDING'" [class.text-white]="filterStatus() === 'PENDING'"
+          [class.text-slate-600]="filterStatus() !== 'PENDING'">
+          Pendientes
+        </button>
+      </div>
+    </div>
+
+    <!-- Table Content Area -->
+    @if (isFetching()) {
+      <div class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-3">
+        <svg class="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-sm">Cargando consultas a Claude AI...</span>
+      </div>
+    } @else if (filteredQueries().length === 0) {
+      <div class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-2 border border-dashed border-slate-200/60 rounded-xl">
+        <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1H9L8 4zm0 0v1.5a2.5 2.5 0 005 0V4m-5 0l1 1h4l1-1M12 12v3" />
+        </svg>
+        <span class="text-sm font-medium">No se encontraron consultas registradas.</span>
+      </div>
+    } @else {
+      <div class="overflow-x-auto rounded-xl border border-slate-200/50 bg-slate-50/40 max-h-[550px] overflow-y-auto">
+        <table class="w-full text-left border-collapse select-text">
+          <thead>
+            <tr class="bg-slate-100/80 text-xs font-bold uppercase text-slate-500 tracking-wider">
+              <th class="px-5 py-4 border-b border-slate-200/60">ID</th>
+              <th class="px-5 py-4 border-b border-slate-200/60">Pregunta</th>
+              <th class="px-5 py-4 border-b border-slate-200/60">Respuesta de Claude</th>
+              <th class="px-5 py-4 border-b border-slate-200/60">Estado</th>
+              <th class="px-5 py-4 border-b border-slate-200/60">Creación</th>
+              <th class="px-5 py-4 border-b border-slate-200/60 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-sm text-slate-700">
+            @for (item of filteredQueries(); track item.id) {
+              <tr class="hover:bg-slate-100/40 transition duration-150">
+                <td class="px-5 py-3.5 font-mono text-xs text-indigo-600 font-semibold select-all">
+                  #{{ item.id }}
+                </td>
+                <td class="px-5 py-3.5 max-w-xs truncate text-xs font-semibold text-slate-800">
+                  {{ item.queryText }}
+                </td>
+                <td class="px-5 py-3.5 max-w-sm truncate text-xs text-slate-500 select-text">
+                  {{ item.responseText || 'Sin respuesta aún.' }}
+                </td>
+                <td class="px-5 py-3.5">
+                  @if (item.status === 'COMPLETED') {
+                    <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg">
+                      <span class="h-1.5 w-1.5 bg-emerald-500 rounded-full"></span>
+                      <span>COMPLETED</span>
+                    </span>
+                  } @else if (item.status === 'PENDING') {
+                    <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-100 rounded-lg">
+                      <span class="h-1.5 w-1.5 bg-amber-500 rounded-full animate-pulse"></span>
+                      <span>PENDING</span>
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 text-xs font-semibold text-red-600 bg-red-50 border border-red-100 rounded-lg">
+                      <span class="h-1.5 w-1.5 bg-red-400 rounded-full"></span>
+                      <span>{{ item.status || 'ERROR' }}</span>
+                    </span>
+                  }
+                </td>
+                <td class="px-5 py-3.5 text-xs text-slate-500">
+                  {{ item.createdAt ? (item.createdAt | date:'short') : '---' }}
+                </td>
+                <td class="px-5 py-3.5 text-right">
+                  <div class="flex items-center justify-end space-x-2">
+                    <button (click)="selectedQuery.set(item)" class="px-2.5 py-1.5 text-xs bg-indigo-50 border border-indigo-200/50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition select-none cursor-pointer">
+                      Ver
+                    </button>
+                    @if (item.status === 'PENDING') {
+                      <button (click)="restoreQuery(item.id)" class="px-2.5 py-1.5 text-xs bg-emerald-50 border border-emerald-200/50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition select-none cursor-pointer">
+                        Restaurar
+                      </button>
+                    } @else {
+                      <button (click)="openEditModal(item)" class="px-2.5 py-1.5 text-xs bg-amber-50 border border-amber-200/50 text-amber-600 rounded-xl hover:bg-amber-100 transition select-none cursor-pointer">
+                        Editar
+                      </button>
+                      <button (click)="deleteQuery(item.id)" class="px-2.5 py-1.5 text-xs bg-red-50 border border-red-200/50 text-red-600 rounded-xl hover:bg-red-100 transition select-none cursor-pointer">
+                        Eliminar
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- Detailed View Modal -->
+  @if (selectedQuery()) {
+    <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div class="bg-white/95 backdrop-blur-md max-w-2xl w-full border border-slate-200/80 rounded-2xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto select-text">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <h3 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+            <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Detalle Completo de la Consulta #{{ selectedQuery()?.id }}</span>
+          </h3>
+          <button (click)="selectedQuery.set(null)" class="text-slate-400 hover:text-slate-600 transition select-none cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4 bg-slate-50/50 p-5 rounded-xl border border-slate-200/50">
+          <div>
+            <span class="text-xs text-slate-400 font-bold uppercase block">Pregunta / Texto enviado:</span>
+            <p class="text-sm text-slate-800 font-semibold whitespace-pre-wrap mt-1 leading-relaxed select-text">
+              {{ selectedQuery()?.queryText }}
+            </p>
+          </div>
+          <div class="grid grid-cols-2 gap-4 border-t border-slate-200/60 pt-3">
+            <div>
+              <span class="text-xs text-slate-400 font-bold uppercase block">Estado:</span>
+              <span class="text-sm font-bold text-slate-800">{{ selectedQuery()?.status }}</span>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 font-bold uppercase block">Tokens Usados:</span>
+              <span class="text-sm font-bold text-indigo-600">{{ selectedQuery()?.tokensUsed || '---' }}</span>
+            </div>
+          </div>
+          <div class="border-t border-slate-200/60 pt-3">
+            <span class="text-xs text-slate-400 font-bold uppercase block mb-1">Respuesta de Claude AI:</span>
+            <div [innerHTML]="renderMarkdown(selectedQuery()?.responseText)" class="text-sm text-slate-700 whitespace-pre-wrap max-h-80 overflow-y-auto leading-relaxed select-text font-normal bg-white p-4 rounded-xl border border-slate-200/50 shadow-inner">
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2">
+          <button (click)="selectedQuery.set(null)" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition select-none cursor-pointer">
+            Entendido
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<!-- Create New Claude Query Modal -->
+@if (isCreateOpen()) {
+  <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-md max-w-md w-full border border-slate-200/80 rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+          <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+          <span>Nueva Consulta</span>
+        </h3>
+        <button (click)="closeCreateModal()" class="text-slate-400 hover:text-slate-600 transition select-none cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form (submit)="submitQuery($event)" class="space-y-4">
+        <div>
+          <label for="queryText" class="block text-sm font-bold text-slate-700 mb-1.5">Texto de Consulta</label>
+          <textarea 
+            id="queryText" 
+            name="queryText" 
+            rows="4" 
+            [(ngModel)]="newQueryText"
+            placeholder="Ingresa tu pregunta para Claude AI..." 
+            required
+            class="w-full bg-white border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-800 rounded-xl px-4 py-3 text-sm transition outline-none resize-none"
+          ></textarea>
+          <span class="text-xs text-slate-400 mt-1.5 block leading-relaxed">
+            El backend consultará los servidores de Claude y registrará la respuesta.
+          </span>
+        </div>
+
+        <div class="flex items-center space-x-3 pt-2">
+          <button 
+            type="button" 
+            (click)="closeCreateModal()"
+            class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-sm transition select-none cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            [disabled]="isSubmitting() || !newQueryText().trim()"
+            class="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl shadow-md transition select-none cursor-pointer text-sm"
+          >
+            @if (isSubmitting()) {
+              <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Consultando...</span>
+            } @else {
+              <span>Enviar</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Edit Existing Claude Query Modal -->
+@if (isEditOpen()) {
+  <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div class="bg-white/95 backdrop-blur-md max-w-lg w-full border border-slate-200/80 rounded-2xl p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+          <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span>Editar Consulta #{{ editItem()?.id }}</span>
+        </h3>
+        <button (click)="closeEditModal()" class="text-slate-400 hover:text-slate-600 transition select-none cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <form (submit)="updateQuery($event)" class="space-y-4">
+        <div>
+          <label for="editQueryText" class="block text-sm font-bold text-slate-700 mb-1.5">Pregunta de Consulta</label>
+          <textarea 
+            id="editQueryText" 
+            name="editQueryText" 
+            rows="3" 
+            [(ngModel)]="editQueryText"
+            required
+            class="w-full bg-white border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-800 rounded-xl px-4 py-2.5 text-sm transition outline-none resize-none"
+          ></textarea>
+        </div>
+
+        <div>
+          <label for="editStatus" class="block text-sm font-bold text-slate-700 mb-1.5">Estado</label>
+          <select 
+            id="editStatus" 
+            name="editStatus" 
+            [(ngModel)]="editStatus"
+            class="w-full bg-white border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-800 rounded-xl px-4 py-2.5 text-sm transition outline-none"
+          >
+            <option value="PENDING">PENDING</option>
+            <option value="COMPLETED">COMPLETED</option>
+            <option value="ERROR">ERROR</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="editResponseText" class="block text-sm font-bold text-slate-700 mb-1.5">Respuesta de Claude AI</label>
+          <textarea 
+            id="editResponseText" 
+            name="editResponseText" 
+            rows="4" 
+            [(ngModel)]="editResponseText"
+            class="w-full bg-white border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 text-slate-800 rounded-xl px-4 py-2.5 text-sm transition outline-none resize-none"
+          ></textarea>
+        </div>
+
+        <div class="flex items-center space-x-3 pt-2">
+          <button 
+            type="button" 
+            (click)="closeEditModal()"
+            class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl text-sm transition select-none cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            [disabled]="isSubmitting() || !editQueryText().trim()"
+            class="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl shadow-md transition select-none cursor-pointer text-sm"
+          >
+            @if (isSubmitting()) {
+              <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Actualizando...</span>
+            } @else {
+              <span>Guardar Cambios</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
