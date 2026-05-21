@@ -28,7 +28,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME_LEONARDO }}
-          password: ${{ secrets.DOCKERHUB_TOKEN_LEONARDO }}
+          password: ${{ secrets.DOCKER_TOKEN_LEONARDO }}
 
       # 3. Build y Push con tags latest y SHA
       - name: Build and Push Docker Image to Docker Hub
