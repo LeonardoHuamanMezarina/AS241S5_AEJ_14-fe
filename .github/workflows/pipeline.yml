@@ -1,0 +1,32 @@
+name: SonarCloud Analysis (Frontend)
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Requerido por SonarCloud para el historial de git
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Opcional: Si quieres reportar cobertura de pruebas en SonarCloud, ejecuta tus tests aquí
+      # - name: Run Tests with Coverage
+      #   run: npm run test -- --code-coverage --no-watch --no-progress
+
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@v2.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Proveído por GitHub
+          SONAR_TOKEN: ${{ secrets.SONAR_SECRET }}    # Tu token de SonarCloud
