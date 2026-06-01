@@ -27,6 +27,14 @@ jobs:
 
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v2.2.0
+        with:
+          args: >
+            -Dsonar.projectKey=LeonardoHuamanMezarina_AS241S5_AEJ_14-fe
+            -Dsonar.organization=leonardohuamanmezarina
+            -Dsonar.sources=src
+            -Dsonar.exclusions=**/node_modules/**,**/*.spec.ts,src/environments/**
+            -Dsonar.sourceEncoding=UTF-8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Proveído por GitHub
           SONAR_TOKEN: ${{ secrets.SONAR_SECRET }}    # Tu token de SonarCloud
+
